@@ -35,3 +35,38 @@ export const fetchDailyTimeSeries = async (symbol) => {
     throw error; // Rethrow or handle as needed
   }
 };
+
+//=========================================================
+
+const popularStockSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "FB"];
+
+export const fetchPopularStocks = async () => {
+  const requests = popularStockSymbols.map((symbol) =>
+    fetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${stockApiKey}`
+    )
+      .then((response) => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then((data) => {
+        // Parse the response to extract relevant data
+        const quote = data["Global Quote"];
+        return {
+          symbol: quote["01. symbol"],
+          price: quote["05. price"],
+          change: quote["09. change"],
+          changePercent: quote["10. change percent"],
+        };
+      })
+      .catch((error) => {
+        console.error(`Couldn't fetch data for symbol: ${symbol}`, error);
+        return null; // Return null or handle as needed
+      })
+  );
+
+  // Wait for all requests to complete
+  const results = await Promise.all(requests);
+  // Filter out any null responses (failed requests)
+  return results.filter((stock) => stock !== null);
+};

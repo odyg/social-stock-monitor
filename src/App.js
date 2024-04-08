@@ -1,23 +1,18 @@
-const stockApiKey = process.env.REACT_APP_STOCK_API_KEY;
-const chatApiKey = process.env.REACT_APP_CHAT_API_KEY;
-
-//App ID: 255568800def2d89
-//Auth Key: feb58f9a4503e118b536885e8a46d68957eff6ba
-//API Endpoint: https://255568800def2d89.api-us.cometchat.io/v3
-//Region US
-
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CometChat } from "@cometchat-pro/chat";
-import LandingPage from "./pages/LandingPage";
-import StockDetailsPage from "./pages/StockDetailsPage";
-import { fetchDailyTimeSeries } from "./services/alphaVantageService";
-// Import LoginPage and other components/pages you've created
+import LandingPage from "./components/LandingPage";
+import StockDetailsPage from "./components/StockDetailsPage";
+import Watchlist from "./components/Watchlist";
+import LoginPage from "./components/LoginPage";
+import Portfolio from "./components/Portfolio";
+// import { fetchDailyTimeSeries } from "./services/alphaVantageService";
+
 const appId = process.env.REACT_APP_STOCK_APP_ID;
 // CometChat initialization settings
 const appSetting = new CometChat.AppSettingsBuilder()
   .subscribePresenceForAllUsers()
-  .setRegion("US") // Ensure to replace 'US' with your actual CometChat app region
+  .setRegion("US")
   .build();
 
 CometChat.init(appId, appSetting).then(
@@ -32,25 +27,77 @@ CometChat.init(appId, appSetting).then(
 );
 
 function App() {
-  useEffect(() => {
-    // Replace 'IBM' with the stock symbol you want to test
-    fetchDailyTimeSeries("IBM")
-      .then((data) => {
-        console.log("Stock Data:", data);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch stock data", error);
-      });
-  }, []);
+  const [watchlist, setWatchlist] = useState([]);
+  const [portfolio, setPortfolio] = useState([]);
+
+  const addToWatchlist = (stock) => {
+    if (!watchlist.some((item) => item.symbol === stock.symbol)) {
+      setWatchlist((prevWatchlist) => [...prevWatchlist, stock]);
+    }
+  };
+
+  const removeFromWatchlist = (symbol) => {
+    setWatchlist((prevWatchlist) =>
+      prevWatchlist.filter((stock) => stock.symbol !== symbol)
+    );
+  };
+
+  const addToPortfolio = (holding) => {
+    const existingHolding = portfolio.find(
+      (item) => item.symbol === holding.symbol
+    );
+    if (existingHolding) {
+      setPortfolio(
+        portfolio.map((item) =>
+          item.symbol === holding.symbol
+            ? { ...item, quantity: item.quantity + holding.quantity }
+            : item
+        )
+      );
+    } else {
+      setPortfolio([...portfolio, holding]);
+    }
+  };
+
+  const removeFromPortfolio = (symbol) => {
+    setPortfolio(portfolio.filter((holding) => holding.symbol !== symbol));
+  };
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />{" "}
-        {/* Assume you have a LoginPage */}
-        <Route path="/stock/:id" element={<StockDetailsPage />} />
-        {/* Define other routes here */}
+        <Route
+          path="/"
+          element={<LandingPage addToWatchlist={addToWatchlist} />}
+        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/stock/:id"
+          element={<StockDetailsPage addToWatchlist={addToWatchlist} />}
+        />
+        <Route
+          path="/watchlist"
+          element={
+            <Watchlist watchlist={watchlist} onRemove={removeFromWatchlist} />
+          }
+        />
+        <Route
+          path="/portfolio"
+          element={
+            <Portfolio portfolio={portfolio} onRemove={removeFromPortfolio} />
+          }
+        />
+        <Route
+          path="/stock/:id"
+          element={
+            <StockDetailsPage
+              addToWatchlist={addToWatchlist}
+              addToPortfolio={addToPortfolio}
+            />
+          }
+        />
+
+        {/* Add more routes as needed */}
       </Routes>
     </Router>
   );
