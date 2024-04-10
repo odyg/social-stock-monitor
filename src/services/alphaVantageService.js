@@ -15,7 +15,7 @@ const stockApiKey = process.env.REACT_APP_STOCK_API_KEY;
 // Function to fetch daily time series data for a given stock symbol
 export const fetchDailyTimeSeries = async (symbol) => {
   const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${stockApiKey}`;
-
+  //  https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -38,7 +38,7 @@ export const fetchDailyTimeSeries = async (symbol) => {
 
 //=========================================================
 
-const popularStockSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "FB"];
+const popularStockSymbols = ["META"];
 
 export const fetchPopularStocks = async () => {
   const requests = popularStockSymbols.map((symbol) =>
@@ -50,8 +50,17 @@ export const fetchPopularStocks = async () => {
         return response.json();
       })
       .then((data) => {
-        // Parse the response to extract relevant data
+        if (data.Note) {
+          // API has returned a note, possibly due to call frequency limits
+          console.warn(`Note from API for symbol ${symbol}:`, data.Note);
+          return null;
+        }
+
         const quote = data["Global Quote"];
+        if (!quote) {
+          throw new Error(`No Global Quote found for symbol: ${symbol}`);
+        }
+
         return {
           symbol: quote["01. symbol"],
           price: quote["05. price"],
