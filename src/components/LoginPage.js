@@ -1,36 +1,53 @@
 // src/pages/LoginPage.js
 
 import React, { useState } from "react";
-import { CometChat } from "@cometchat-pro/chat";
-
-const authKey = process.env.REACT_APP_STOCK_AUTH_KEY;
+import axios from "axios"; // Make sure to install axios with npm or yarn
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
-  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // Assuming 'YOUR_AUTH_KEY' is replaced with your actual CometChat Auth Key
-    CometChat.login(userId, authKey).then(
-      (user) => {
-        console.log("Login Successful:", { user });
-        // Navigate to the main chat page or dashboard upon successful login
-      },
-      (error) => {
-        console.log("Login failed with exception:", { error });
-        // Handle login failure (e.g., display an error message)
-      }
-    );
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:3001/login", {
+        email,
+        password,
+      });
+      console.log("Login successful", response.data);
+      // Redirect to the dashboard or home page on successful login
+    } catch (error) {
+      console.error("Login failed:", error.response);
+      // Handle login failure (e.g., display an error message)
+    }
   };
 
   return (
     <div>
-      <input
-        type="text"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        placeholder="Enter User ID"
-      />
-      <button onClick={handleLogin}>Login</button>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter email"
+          required
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter password"
+          required
+        />
+        <button type="submit">Login</button>
+        {/* Register Button */}
+        <p>
+          Don't have an account?
+          <Link to="/register">Register Here</Link>{" "}
+          {/* Update the path as necessary for your app */}
+        </p>
+      </form>
     </div>
   );
 };
