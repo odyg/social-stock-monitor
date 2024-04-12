@@ -1,24 +1,37 @@
 import React, { useState } from "react";
 import axios from "axios"; // assuming you've installed axios
+import { useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [newUsername, setUsername] = useState("");
+  const [newEmail, setEmail] = useState("");
+  const [newPassword, setPassword] = useState("");
+  let navigate = useNavigate();
 
   const handleRegister = async (event) => {
     event.preventDefault(); // Prevent the form from reloading the page
     try {
       const response = await axios.post("http://localhost:3001/register", {
-        username,
-        email,
-        password,
+        newUsername,
+        newEmail,
+        newPassword,
       });
-      console.log("Registration successful", response.data);
-      // Redirect to login page or auto-login the user
+      if (response.data.success) {
+        // Display an alert to the user
+        alert(
+          "Registration successful. You will be redirected to the login page."
+        );
+
+        // Redirect to the login page
+        // If you're using React Router, you might use the `useNavigate` hook
+        navigate("/login"); // This is assuming you've set up `navigate` using the `useNavigate` hook from 'react-router-dom'
+      } else {
+        // Handle the case where registration was not successful
+        alert(response.data.message);
+      }
     } catch (error) {
-      console.error("Registration failed", error.response);
-      // Handle registration failure (e.g., display an error message)
+      // Handle errors, such as displaying a message to the user
+      alert("Registration failed. Please try again.");
     }
   };
 
@@ -26,21 +39,21 @@ const RegisterPage = () => {
     <form onSubmit={handleRegister}>
       <input
         type="text"
-        value={username}
+        value={newUsername}
         onChange={(e) => setUsername(e.target.value)}
         placeholder="Username"
         required
       />
       <input
         type="email"
-        value={email}
+        value={newEmail}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         required
       />
       <input
         type="password"
-        value={password}
+        value={newPassword}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
         required

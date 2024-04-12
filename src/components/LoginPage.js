@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import axios from "axios"; // Make sure to install axios with npm or yarn
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  let navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -15,11 +17,16 @@ const LoginPage = () => {
         email,
         password,
       });
-      console.log("Login successful", response.data);
-      // Redirect to the dashboard or home page on successful login
+
+      if (response.data.success) {
+        // Now you can use the user ID that was returned to navigate to a specific user page
+        // Make sure your React Router has a route set up to handle "/success/:userId"
+        navigate(`/success/${response.data.userId}`);
+      } else {
+        alert(response.data.message);
+      }
     } catch (error) {
-      console.error("Login failed:", error.response);
-      // Handle login failure (e.g., display an error message)
+      alert(error.response?.data?.message || "An error occurred during login.");
     }
   };
 
